@@ -4,10 +4,10 @@ CFLAGS = -ansi -pedantic -Wall -Wextra -O3
 
 all: tests/md2sum tests/tests
 
-tests/md2sum: tests/md2sum.c
+tests/md2sum: tests/md2sum.c md2.h
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ tests/md2sum.c $(LDLIBS)
 
-tests/tests: tests/tests.c
+tests/tests: tests/tests.c md2.h
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ tests/tests.c $(LDLIBS)
 
 clean:
