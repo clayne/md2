@@ -9,4 +9,10 @@ void md2_append(struct md2 *, const void *, size_t);
 void md2_finish(struct md2 *, void *);
 ```
 
+## Notes
+
+When compiled with GCC, performance benefits significantly from
+`-funroll-loops`. Clang more aggressively unrolls loops, so this is
+essentially the default.
+
 [rfc]: https://tools.ietf.org/html/rfc1319
