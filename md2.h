@@ -10,7 +10,7 @@
 #define MD2_BLOCK_SIZE 16
 
 struct md2 {
-    int L, j;
+    int L, f;
     unsigned char c[MD2_BLOCK_SIZE];
     unsigned char x[MD2_BLOCK_SIZE * 3];
 };
@@ -26,7 +26,7 @@ md2_init(struct md2 *ctx)
 {
     int i;
     ctx->L = 0;
-    ctx->j = 0;
+    ctx->f = 0;
     for (i = 0; i < (int)sizeof(ctx->c); i++)
         ctx->c[i] = 0;
     for (i = 0; i < (int)sizeof(ctx->x); i++)
@@ -68,18 +68,16 @@ md2_append(struct md2 *ctx, const void *buf, size_t len)
     m = buf;
     while (len) {
         /* Absorb input block */
-        while (ctx->j < 16) {
+        for (; len && ctx->f < 16; len--, ctx->f++) {
             int b = *m++;
-            ctx->x[ctx->j + 16] = b;
-            ctx->x[ctx->j + 32] = b ^ ctx->x[ctx->j];
-            ctx->L = ctx->c[ctx->j] ^= s[b ^ ctx->L];
-            ctx->j++;
-            if (!--len) break;
+            ctx->x[ctx->f + 16] = b;
+            ctx->x[ctx->f + 32] = b ^ ctx->x[ctx->f];
+            ctx->L = ctx->c[ctx->f] ^= s[b ^ ctx->L];
         }
 
         /* Transform */
-        if (ctx->j == MD2_BLOCK_SIZE) {
-            ctx->j = 0;
+        if (ctx->f == MD2_BLOCK_SIZE) {
+            ctx->f = 0;
             t = 0;
             for (j = 0; j < 18; j++) {
                 for (k = 0; k < 48; k++)
@@ -93,14 +91,15 @@ md2_append(struct md2 *ctx, const void *buf, size_t len)
 static void
 md2_finish(struct md2 *ctx, void *digest)
 {
-    int i;
+    int i, n;
     unsigned char *out;
     unsigned char pad[MD2_BLOCK_SIZE];
 
     /* Append padding */
-    for (i = 0; i < MD2_BLOCK_SIZE - ctx->j; i++)
-        pad[i] = MD2_BLOCK_SIZE - ctx->j;
-    md2_append(ctx, pad, MD2_BLOCK_SIZE - ctx->j);
+    n = MD2_BLOCK_SIZE - ctx->f;
+    for (i = 0; i < n; i++)
+        pad[i] = n;
+    md2_append(ctx, pad, n);
 
     /* Append checksum */
     md2_append(ctx, ctx->c, sizeof(ctx->c));
